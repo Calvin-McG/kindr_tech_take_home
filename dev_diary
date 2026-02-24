@@ -1,0 +1,355 @@
+10:2X   -   Pushed base express project to repo, misc config steps
+10:26   -   Got test_requirements.py running for the first time, takes ~90s
+Went to https://takehome-production.up.railway.app and saw the following, showing me the endpoints:
+{
+  "endpoints": [
+    "/health - Health check",
+    "/soap/PatientService - Get patient information",
+    "/soap/AppointmentService/GetAvailability - Get available slots",
+    "/soap/AppointmentService/BookAppointment - Book an appointment"
+  ],
+  "note": "This is a legacy system simulator with intentional delays and quirks",
+  "service": "DentalTrack Pro SOAP API Simulator",
+  "status": "operational",
+  "version": "2.1"
+}
+
+Draft of phone endpoint, tried to nav to https://takehome-production.up.railway.app/soap/PatientService and got a 405 :(
+GET also returns 405, body shows it allows POST and OPTIONS, POST with blank body gave a Bad Request response, progress!
+Tried to access WSDL for SOAP endpoint via https://takehome-production.up.railway.app/soap/PatientService?wsdl, https://takehome-production.up.railway.app/soap?wsdl, https://takehome-production.up.railway.app?wsdl
+
+10:49   -   New strategy, POST to https://takehome-production.up.railway.app/soap/PatientService with the following:
+    {
+        phoneNumber: 1,
+        phone_number: 1,
+        phonenumber: 1
+    }
+Gave 404, meaning it doesn't have someone with that phone number (obviously), but one of those variables is the valid format.
+
+10:52   -    After running three requests, each with a different version of the above, phone_number got the 404 while the others got 400.
+
+Referenced test file to try http://localhost:3000/api/v1/patients/5551234567
+
+GET /api/v1/patients/5551234567 304 22.415 ms - -
+Response {
+  status: 400,
+  statusText: 'Bad Request',
+  headers: Headers {
+    'content-length': '167',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:04:02 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'oaxmYfnPTnafsDGB0_TJvA'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: false,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+
+11:06   -   Might have misread the logs, retrying one by one:
+
+GET /api/v1/patients/5551234567 304 23.281 ms - -
+0
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:07:10 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'w-g54MSjR7WbnFfn9I3ezw'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+2
+Response {
+  status: 400,
+  statusText: 'Bad Request',
+  headers: Headers {
+    'content-length': '167',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:07:10 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'gBPRsBzuTomRvW4I2prcFg'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: false,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+3
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:07:10 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'HHXQO0qeTRCbLdqnnpoFkQ'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+1
+Response {
+  status: 400,
+  statusText: 'Bad Request',
+  headers: Headers {
+    'content-length': '167',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:07:13 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'h-rgEMtWSr-Rn4CMn6XIxQ'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: false,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+
+11:08   -   Correct format appears to be `phoneNumber`
+Confirmed:
+GET /api/v1/patients/5551234567 304 22.708 ms - -
+3
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:08:33 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': '_YIq_ggSQ1Wcpx_1npoFkQ'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+0
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:08:33 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'ysPXwjM8SF-KmsJO9I3ezw'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+
+11:09   -   Response body is a ReadableStream
+
+GET /api/v1/patients/5551234567 304 22.082 ms - -
+0
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:10:15 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'HIbCHy77TTCF1jVy-_9nXA'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+{ 'soap:Envelope': { 'soap:Body': { GetPatientResponse: [Object] } } }
+
+11:14   -   Added xml2js to handle XML parsing, but it's repo appears to be down.
+11:22   -   xmltojson loads, but either has errors or is incompatible
+11:25   -   Trying xml-js, also errors on response
+11:25   -   Got a 500, think I'm going too fast:
+Response {
+  status: 500,
+  statusText: 'Internal Server Error',
+  headers: Headers {
+    'content-length': '45',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:25:51 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'J3fcyAKrTbekCbJd-_9nXA'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: false,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+{ error: 'Database connection timeout' }
+11:26   -   Tried again with same request, looks like speed was the issue:
+
+GET /api/v1/patients/5551234567 304 1.476 ms - -
+0
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:26:21 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'VMGcOHq2Tp-0gV-V-_9nXA'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+{ 'soap:Envelope': { 'soap:Body': { GetPatientResponse: [Object] } } }
+undefined
+
+11:28   -   Looking into pure SOAP libraries for Express, but they tend to want the WSDL, which I've not been able to located in the API tree
+11:33   -   It's XML, lets use it like XML. Added jsdom so I can treat the XML like any other XML document.
+11:35   -   jsdom doesn't support CommonJS, and refactoring the codebase to ECMAScript would eat up a lot of time so trying xmldom instead.
+11:40   -   It runs, but is struggling with the structure of the response.
+0
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:41:23 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'NpwxdmiNTQuiNpg22prcFg'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+{ 'soap:Envelope': { 'soap:Body': { GetPatientResponse: [Object] } } }
+[xmldom error]  invalid doc source
+@#[line:0,col:undefined]
+undefined
+11:42   -   Both "text/xml" and "application/xml" fail
+11:43   -   Switched to data["soap:Envelope"] to try to access response and I'm on the right track.
+11:45   -   Following that thread, I don't even need the xml parsing.
+11:46   -   Tada:
+Response {
+  status: 200,
+  statusText: 'OK',
+  headers: Headers {
+    'content-length': '360',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 18:46:10 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'dY5AZOWQTNaaWk8AnpoFkQ'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: true,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+{ 'soap:Envelope': { 'soap:Body': { GetPatientResponse: [Object] } } }
+{ 'soap:Body': { GetPatientResponse: { Patient: [Object] } } }
+{
+  GetPatientResponse: {
+    Patient: {
+      dob: '03/15/1985',
+      firstName: 'John',
+      insuranceActive: 'Y',
+      lastName: 'Smith',
+      lastVisit: '2024-12-15',
+      patientId: 'P001',
+      phoneNumber: '(555) 123-4567'
+    }
+  }
+}
+{
+  Patient: {
+    dob: '03/15/1985',
+    firstName: 'John',
+    insuranceActive: 'Y',
+    lastName: 'Smith',
+    lastVisit: '2024-12-15',
+    patientId: 'P001',
+    phoneNumber: '(555) 123-4567'
+  }
+}
+{
+  dob: '03/15/1985',
+  firstName: 'John',
+  insuranceActive: 'Y',
+  lastName: 'Smith',
+  lastVisit: '2024-12-15',
+  patientId: 'P001',
+  phoneNumber: '(555) 123-4567'
+}
+11:53   -   Looks like I keep hitting the rate limiting, got a couple 500s in a row. Appears to be one request per minute?
+12:07   -   Just made a call and got another 500, it's been some time since the last
+GET /api/v1/patients/(555)%20123-4567 304 23.478 ms - -
+GET /favicon.ico 404 242.775 ms - 1132
+Response {
+  status: 500,
+  statusText: 'Internal Server Error',
+  headers: Headers {
+    'content-length': '45',
+    'content-type': 'application/json',
+    date: 'Tue, 24 Feb 2026 19:07:17 GMT',
+    server: 'railway-edge',
+    'x-railway-edge': 'railway/us-west2',
+    'x-railway-request-id': 'JWTbsc3AR4i_i6VcLPU1MQ'
+  },
+  body: ReadableStream { locked: false, state: 'readable', supportsBYOB: true },
+  bodyUsed: false,
+  ok: false,
+  redirected: false,
+  type: 'basic',
+  url: 'https://takehome-production.up.railway.app/soap/PatientService'
+}
+500 Internal Server Error
+
+
