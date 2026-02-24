@@ -14,4 +14,4 @@ These are my desired tasks, in order, if I had more time:
 
 Additional Edge Cases:
 1. The existing batch of dates returned by the PatientService included no time zone and no hour information. This is desirable and keeps things simple. However if some patients in the legacy system did have such information attached to their dates it would be possible to get off-by-one errors as the conversion into Zulu time caused the day to shift by one. 
-2. 
+2. International phone numbers can have numbers of digits other than ten, and some systems require the country code even in cases where all the users are in the US and Canada. I recall country code being quite the headache at WestJet and it's the next edge case I would look to cover.
