@@ -2,8 +2,6 @@
 parses it to the numeric UTC value,
 and then returns it in the format YYYY-MM-DD */
 exports.formatDate = function(date) {
-    console.log(date)
-
     // Parse the date to the numeric UTC value
     const dateNumeric = Date.parse(date);
 
